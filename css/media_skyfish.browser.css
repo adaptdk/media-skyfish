@@ -1,0 +1,38 @@
+#media-skyfish-form .media-skyfish-active {
+  border: 3px solid #ff0000;
+}
+
+#media-skyfish-form .media-skyfish-list {
+  display: list-item;
+  list-style: none;
+  float: left;
+  margin: 0 10px 10px 0;
+  position: relative;
+  padding: 0 !important;
+  height: 178px;
+}
+#media-skyfish-form .media-skyfish-list div {
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  padding: 3px;
+  opacity: 0.6;
+  filter: alpha(opacity=60); /* For IE8 and earlier */
+}
+
+#media-skyfish-form .media-skyfish-list .media-skyfish-checkbox {
+  display: none;
+}
+
+#media-skyfish-form .media-skyfish-list label.option {
+  font-size: 16px;
+  line-height: 17px;
+  background-color: #fff;
+  width: 100%;
+}
+
+#media-skyfish-form #media-skyfish-form-submit {
+  position: fixed;
+  right: 30px;
+  top: 100px;
+}
