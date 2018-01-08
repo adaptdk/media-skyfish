@@ -2,61 +2,23 @@
 
 /**
  * @file
- * Code for the media_skyfish module.
+ * Contains media_skyfish.module.
  */
 
-module_load_include('inc', 'media_skyfish', 'includes/media_skyfish.variables');
-module_load_include('inc', 'media_skyfish', 'includes/media_skyfish.utilities');
+use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
- * Implements hook_media_browser_plugin_info().
+ * Implements hook_help().
  */
-function media_skyfish_media_browser_plugin_info() {
-  $info['skyfish'] = array(
-    'title' => t('Skyfish'),
-    'class' => 'MediaSkyfishBrowser',
-    'weight' => 100,
-  );
+function media_skyfish_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the media_skyfish module.
+    case 'help.page.media_skyfish':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Provides skyfish.com integration to media module') . '</p>';
+      return $output;
 
-  return $info;
-}
-
-/**
- * Implements hook_menu().
- */
-function media_skyfish_menu() {
-  $items = array();
-  $items['admin/config/media/media_skyfish'] = array(
-    'title' => 'Skyfish settings',
-    'description' => 'Configure required settings for Media: Skyfish.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('media_skyfish_settings_form'),
-    'access arguments' => array('configure skyfish'),
-    'file' => 'includes/media_skyfish.admin.inc',
-  );
-
-  $items['user/%user/skyfish'] = array(
-    'title' => 'Skyfish settings',
-    'description' => 'Configure Skyfish api settings.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('media_skyfish_user_settings_form', 1),
-    'access arguments' => array('configure own skyfish'),
-    'file' => 'includes/media_skyfish.user.inc',
-  );
-
-  return $items;
-}
-
-/**
- * Implements hook_permission().
- */
-function media_skyfish_permission() {
-  return array(
-    'configure skyfish' => array(
-      'title' => t('Configure Global Media Skyfish settings'),
-    ),
-    'configure own skyfish' => array(
-      'title' => t('Configure own Media Skyfish settings'),
-    ),
-  );
+    default:
+  }
 }
