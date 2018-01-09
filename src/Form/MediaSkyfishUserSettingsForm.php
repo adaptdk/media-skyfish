@@ -11,9 +11,6 @@ use Drupal\Core\Form\FormStateInterface;
 class MediaSkyfishUserSettingsForm extends ConfigFormBase {
 
   protected function getEditableConfigNames() {
-    return [
-      'media_skyfish.userconfig'
-    ];
   }
 
   /**
@@ -27,14 +24,14 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->config('media_skyfish.userconfig');
+    $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
     $form['skyfish_api_key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Skyfish API Key'),
       '#description' => $this->t('Please enter Skyfish API Key here.'),
       '#maxlength' => 128,
       '#size' => 128,
-      '#default_value' => $config->get('skyfish_api_key'),
+      '#default_value' => $user->field_skyfish_api_user->value,
     ];
     $form['skyfish_api_secret'] = [
       '#type' => 'textfield',
@@ -42,7 +39,7 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
       '#description' => $this->t('Please enter Skyfish API secret key.'),
       '#maxlength' => 128,
       '#size' => 128,
-      '#default_value' => $config->get('skyfish_api_secret'),
+      '#default_value' => $user->field_skyfish_secret_api_key->value,
     ];
     $form['submit'] = [
       '#type' => 'submit',
@@ -64,11 +61,13 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
-
-    $this->config('media_skyfish.adminconfig')
-      ->set('skyfish_api_key', $form_state->getValue('skyfish_api_key'))
-      ->set('skyfish_api_secret', $form_state->getValue('skyfish_api_secret'))
-      ->save();
+    $values = $form_state->getValues();
+    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+     if($user){
+       $user->set('field_skyfish_api_user', $values['skyfish_api_key']);
+       $user->set('field_skyfish_secret_api_key', $values['skyfish_api_secret']);
+       $user->save();
+     }
   }
 
 }
