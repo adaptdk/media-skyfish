@@ -2,6 +2,7 @@
 
 namespace Drupal\media_skyfish\Form;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -62,7 +63,7 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
     $values = $form_state->getValues();
-    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
      if($user){
        $user->set('field_skyfish_api_user', $values['skyfish_api_key']);
        $user->set('field_skyfish_secret_api_key', $values['skyfish_api_secret']);
