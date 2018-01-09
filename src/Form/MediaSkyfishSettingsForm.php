@@ -32,21 +32,21 @@ class MediaSkyfishSettingsForm extends ConfigFormBase {
       '#type' => 'fieldset',
       '#title' => $this->t('Skyfish Global API'),
     ];
-    $form['media_skyfish__api_key'] = [
+    $form['media_skyfish_api_key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Skyfish API Key'),
       '#description' => $this->t('Please enter Skyfish API Key here.'),
       '#maxlength' => 128,
       '#size' => 128,
-      '#default_value' => $config->get('media_skyfish__api_key'),
+      '#default_value' => $config->get('media_skyfish_api_key'),
     ];
-    $form['media_skyfish__api_secret'] = [
+    $form['media_skyfish_api_secret'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Skyfish API Secret'),
       '#description' => $this->t('Please enter Skyfish API secret key.'),
       '#maxlength' => 128,
       '#size' => 128,
-      '#default_value' => $config->get('media_skyfish__api_secret'),
+      '#default_value' => $config->get('media_skyfish_api_secret'),
     ];
     $form['submit'] = [
       '#type' => 'submit',
@@ -71,8 +71,8 @@ class MediaSkyfishSettingsForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
 
     $this->config('media_skyfish.adminconfig')
-      ->set('media_skyfish__api_key', $form_state->getValue('media_skyfish__api_key'))
-      ->set('media_skyfish__api_secret', $form_state->getValue('media_skyfish__api_secret'))
+      ->set('media_skyfish_api_key', $form_state->getValue('media_skyfish_api_key'))
+      ->set('media_skyfish_api_secret', $form_state->getValue('media_skyfish_api_secret'))
       ->save();
   }
 

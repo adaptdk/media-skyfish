@@ -6,6 +6,7 @@ media_skyfish.media_skyfish_settings_form:
     _title: 'MediaSkyfishSettingsForm'
   requirements:
     _access: 'TRUE'
+    _permission: 'administer site configuration'
   
 
 media_skyfish.media_skyfish_user_settings_form:
