@@ -1,10 +1,10 @@
 media_skyfish.adminconfig:
   type: config_object
   mapping:
-    media_skyfish__api_key:
+    media_skyfish_api_key:
       type: string
       label: 'Skyfish API Key'
-    media_skyfish__api_secret:
+    media_skyfish_api_secret:
       type: string
       label: 'Skyfish API Secret'
 media_skyfish.userconfig:
