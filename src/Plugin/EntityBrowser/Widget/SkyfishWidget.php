@@ -27,12 +27,6 @@ class SkyfishWidget extends Upload {
   public function getForm(array &$original_form, FormStateInterface $form_state, array $additional_widget_parameters) {
     $form = parent::getForm($original_form, $form_state, $additional_widget_parameters);
 
-    $form['upload'] = [
-      '#type' => 'managed_file',
-      '#title' => $this->t('Skyfish Upload Form'),
-      '#title_display' => 'visible',
-    ];
-
     return $form;
   }
 }
