@@ -17,3 +17,10 @@ media_skyfish.media_skyfish_user_settings_form:
   requirements:
     _access: 'TRUE'
   
+media_skyfish.media_skyfish_controller_hello:
+  path: '/media_skyfish/hello'
+  defaults:
+    _controller: '\Drupal\media_skyfish\Controller\MediaSkyfishController::hello'
+    _title: 'index'
+  requirements:
+    _permission: 'access content'
