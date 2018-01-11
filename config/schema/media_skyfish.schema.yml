@@ -7,3 +7,9 @@ media_skyfish.adminconfig:
     media_skyfish_api_secret:
       type: string
       label: 'Skyfish API Secret'
+    media_skyfish_global_user:
+      type: string
+      label: 'Username'
+    media_skyfish_global_password:
+      type: string
+      label: 'Password'

@@ -26,6 +26,22 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
+    $form['skyfish_user'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Skyfish Username'),
+      '#description' => $this->t('Please enter username to login to Skyfish.'),
+      '#maxlength' => 128,
+      '#size' => 128,
+      '#default_value' => $user->field_skyfish_username->value,
+    ];
+    $form['skyfish_password'] = [
+      '#type' => 'password',
+      '#title' => $this->t('Skyfish Password'),
+      '#description' => $this->t('Please enter password to login to Skyfish.'),
+      '#maxlength' => 128,
+      '#size' => 128,
+      '#default_value' => $user->field_skyfish_password->value,
+    ];
     $form['skyfish_api_key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Skyfish API Key'),
@@ -41,10 +57,6 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
       '#maxlength' => 128,
       '#size' => 128,
       '#default_value' => $user->field_skyfish_secret_api_key->value,
-    ];
-    $form['submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Submit'),
     ];
 
     return parent::buildForm($form, $form_state);
@@ -67,6 +79,8 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
      if($user){
        $user->set('field_skyfish_api_user', $values['skyfish_api_key']);
        $user->set('field_skyfish_secret_api_key', $values['skyfish_api_secret']);
+       $user->set('field_skyfish_username', $values['skyfish_user']);
+       $user->set('field_skyfish_password', $values['skyfish_password']);
        $user->save();
      }
   }
