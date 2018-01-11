@@ -22,16 +22,3 @@ function media_skyfish_help($route_name, RouteMatchInterface $route_match) {
     default:
   }
 }
-
-function media_skyfish_update_8001() {
-  /* @var $entityFieldManager Drupal\Core\Entity\EntityFieldManager */
-  $entityFieldManager = Drupal::service('entity_field.manager');
-
-  $fields = $entityFieldManager->getFieldDefinitions('user', 'user');
-
-  if (isset($fields['field_skyfish_username'])) {
-    die;
-    $fields['field_MY_FIELD_NAME']->delete();
-
-  }
-}
