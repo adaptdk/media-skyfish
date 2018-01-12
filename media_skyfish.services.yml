@@ -1,0 +1,5 @@
+services:
+  media_skyfish.configservice:
+    class: Drupal\media_skyfish\ConfigService
+    arguments: ['@http_client', '@config.factory']
+
