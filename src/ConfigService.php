@@ -3,7 +3,6 @@
 namespace Drupal\media_skyfish;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use GuzzleHttp\Client;
 
 /**
  * Class ConfigService.
@@ -52,10 +51,8 @@ class ConfigService {
    * ConfigService constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   * @param \GuzzleHttp\Client $client
    */
   public function __construct(ConfigFactoryInterface $config_factory) {
-//    $this->client = $client;
     $this->config = $config_factory->get('media_skyfish.adminconfig');
     //TODO add service for bellow code
     $this->user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());

@@ -2,14 +2,23 @@
 
 namespace Drupal\media_skyfish;
 
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Session\AccountProxy;
+use Drupal\user\Entity\User;
 use GuzzleHttp\Client;
 
 /**
- * Class ApiService.
+ * Class ApiService
+ *
+ * @package Drupal\media_skyfish
  */
 class ApiService {
 
-  const MEDIA_SKYFISH_API_BASE_URL = 'https://api.colourbox.com';
+  public const API_BASE_URL = 'https://api.colourbox.com';
+
+  public const API_URL_FOLDER = '/folder';
+
+  public const API_URL_IMAGES = '';
 
   /**
    * Http client used for connection.
@@ -19,15 +28,24 @@ class ApiService {
   protected $client;
 
   /**
+   * @var bool|string
+   */
+  protected $header;
+
+  protected $account;
+
+  /**
    * ApiService constructor.
    *
-   * @param \Drupal\media_skyfish\ConfigService $config_service
    * @param \GuzzleHttp\Client $client
+   * @param \Drupal\media_skyfish\ConfigService $config_service
+   * @param \Drupal\Core\Session\AccountInterface $account
    */
-  public function __construct(Client $client, ConfigService $config_service) {
+  public function __construct(Client $client, ConfigService $config_service, AccountInterface $account) {
     $this->config = $config_service;
     $this->client = $client;
-
+    $this->header = $this->getHeader();
+    $this->user = $account;
   }
 
   /**
@@ -40,7 +58,7 @@ class ApiService {
     $request = $this
       ->client
       ->request('POST',
-        self::MEDIA_SKYFISH_API_BASE_URL . '/authenticate/userpasshmac',
+        self::API_BASE_URL . '/authenticate/userpasshmac',
         [
           'json' =>
           [
@@ -77,18 +95,18 @@ class ApiService {
    *
    * @param $uri
    *
-   * @return mixed
+   * @return array|null
    */
-  public function doRequest($uri) {
+  protected function doRequest($uri) {
 
     $make_request = $this
       ->client
       ->request(
         'GET',
-        self::MEDIA_SKYFISH_API_BASE_URL . $uri,
+        self::API_BASE_URL . $uri,
         [
           'headers' => [
-            'Authorization' => $this->getHeader(),
+            'Authorization' => $this->header,
           ]
         ]
       );
@@ -96,4 +114,11 @@ class ApiService {
     return json_decode($make_request->getBody());
   }
 
+  public function getFolders(){
+    return $this->doRequest(self::API_URL_FOLDER);
+  }
+
+  public function getImages(){
+    return $this->doRequest(self::API_URL_IMAGES);
+  }
 }

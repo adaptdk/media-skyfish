@@ -21,7 +21,7 @@ class MediaSkyfishController extends ControllerBase {
      * @var \Drupal\media_skyfish\ApiService $connect
      */
     $connect = \Drupal::service('media_skyfish.apiservice');
-    $token = $connect->doRequest('/folder');
+    $token = $connect->getFolders();
     dpm($token);
 
 

@@ -5,5 +5,5 @@ services:
 
   media_skyfish.apiservice:
     class: Drupal\media_skyfish\ApiService
-    arguments: ['@http_client', '@media_skyfish.configservice']
+    arguments: ['@http_client', '@media_skyfish.configservice', '@current_user']
 
