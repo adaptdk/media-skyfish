@@ -21,11 +21,6 @@ class ConfigService {
   protected $user;
 
   /**
-   * @var \GuzzleHttp\Client
-   */
-  protected $client;
-
-  /**
    * Username to connect to Skyfish.
    *
    * @var string
@@ -56,24 +51,28 @@ class ConfigService {
   /**
    * ConfigService constructor.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    * @param \GuzzleHttp\Client $client
    */
-  public function __construct(ConfigFactoryInterface $configFactory, Client $client) {
-    $this->client = $client;
-    $this->config = $configFactory->get('media_skyfish.adminconfig');
+  public function __construct(ConfigFactoryInterface $config_factory) {
+//    $this->client = $client;
+    $this->config = $config_factory->get('media_skyfish.adminconfig');
+    //TODO add service for bellow code
     $this->user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
     $this->initialize();
   }
 
+  /**
+   * Initialize function checks if user entered Skyfish data, if not global Skyfish for the site is used.
+   */
   private function initialize(){
-    $this->key = $this->config->get('media_skyfish_api_key')->isEmpty() ?
+    $this->key = empty($this->config->get('media_skyfish_api_key')) ?
       $this->user->field_skyfish_api_user->value : $this->config->get('media_skyfish_api_key');
-    $this->secret = $this->config->get('media_skyfish_api_secret')->isEmpty() ?
+    $this->secret = empty($this->config->get('media_skyfish_api_secret')) ?
       $this->user->field_skyfish_secret_api_key->value : $this->config->get('media_skyfish_api_secret');
-    $this->username = $this->config->get('media_skyfish_global_user')->isEmpty() ?
+    $this->username = empty($this->config->get('media_skyfish_global_user')) ?
       $this->user->field_skyfish_username->value : $this->config->get('media_skyfish_global_user');
-    $this->key = $this->config->get('media_skyfish_global_password')->isEmpty() ?
+    $this->password = empty($this->config->get('media_skyfish_global_password')) ?
       $this->user->field_skyfish_password->value : $this->config->get('media_skyfish_global_password');
   }
 
@@ -176,6 +175,13 @@ class ConfigService {
     $this->password = $password;
 
     return $this;
+  }
+
+  /**
+   * @return string
+   */
+  public function getHmac() {
+    return hash_hmac('sha1', $this->key . ':' .time(), $this->secret );
   }
 
 }
