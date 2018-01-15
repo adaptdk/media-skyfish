@@ -10,8 +10,14 @@ use GuzzleHttp\Client;
  */
 class ConfigService {
 
+  /**
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
   protected $config;
 
+  /**
+   * @var \Drupal\Core\Entity\EntityInterface|null
+   */
   protected $user;
 
   /**
@@ -77,7 +83,6 @@ class ConfigService {
    * @return string
    */
   public function getKey(): string {
-
     return $this->key;
   }
 
@@ -100,7 +105,6 @@ class ConfigService {
    * @return bool
    */
   public function hasKey() {
-
     return !empty($this->key);
   }
 
@@ -110,7 +114,6 @@ class ConfigService {
    * @return string
    */
   public function getSecret(): string {
-
     return $this->secret;
   }
 
@@ -133,7 +136,6 @@ class ConfigService {
    * @return string
    */
   public function getUsername(): string {
-
     return $this->username;
   }
 
@@ -158,7 +160,6 @@ class ConfigService {
    * @return string
    */
   public function getPassword(): string {
-
     return $this->password;
   }
 
