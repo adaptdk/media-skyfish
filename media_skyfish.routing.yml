@@ -6,7 +6,7 @@ media_skyfish.media_skyfish_settings_form:
     _title: 'Media Skyfish Settings'
   requirements:
     _access: 'TRUE'
-    _permission: 'administer site configuration'
+    _permission: 'administer media skyfish'
   
 
 media_skyfish.media_skyfish_user_settings_form:
@@ -16,6 +16,7 @@ media_skyfish.media_skyfish_user_settings_form:
     _title: 'Media Skyfish User Settings'
   requirements:
     _access: 'TRUE'
+    _permission: 'configure own skyfish'
   
 
 media_skyfish.media_skyfish_controller_hello:
