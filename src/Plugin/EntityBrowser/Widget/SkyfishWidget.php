@@ -26,7 +26,22 @@ class SkyfishWidget extends Upload {
 
   public function getForm(array &$original_form, FormStateInterface $form_state, array $additional_widget_parameters) {
     $form = parent::getForm($original_form, $form_state, $additional_widget_parameters);
+    // @TODO this goes to construct?
+    $connect = \Drupal::service('media_skyfish.apiservice');
+    // @todo: get folders/images from api.
+    $folders = $connect->getFolders();
+    $images = $connect->getImagesInFolder();
+
+    // @todo: add submit method to save selected images in drupal.
 
     return $form;
   }
+
+  // @todo: add submit method to save images in drupal
+
+  // @todo: get array of images to save from FormStateInterface $form_state.
+
+  // @todo: get Metadata for each image in array with ApiService::getImagesMetadata($selected_images_array) (neziurek i fakin naminga!)
+
+  // @todo: save images from skyfish in drupal file system (create new filename is same already exists)
 }

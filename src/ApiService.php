@@ -3,8 +3,6 @@
 namespace Drupal\media_skyfish;
 
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Session\AccountProxy;
-use Drupal\user\Entity\User;
 use GuzzleHttp\Client;
 
 /**
@@ -18,7 +16,7 @@ class ApiService {
 
   public const API_URL_FOLDER = '/folder';
 
-  public const API_URL_IMAGES = '';
+  public const API_URL_SEARCH = '/search?&return_values=title+unique_media_id+thumbnail_url&folder_ids=';
 
   /**
    * Http client used for connection.
@@ -28,6 +26,8 @@ class ApiService {
   protected $client;
 
   /**
+   * Short Description.
+   *
    * @var bool|string
    */
   protected $header;
@@ -67,7 +67,7 @@ class ApiService {
             'key' => $this->config->getKey(),
             'ts' => time(),
             'hmac' => $this->config->getHmac(),
-          ]
+          ],
         ]);
 
     $response = json_decode($request->getBody()->getContents(), TRUE);
@@ -96,6 +96,7 @@ class ApiService {
    * @param $uri
    *
    * @return array|null
+   *   Array of folders.
    */
   protected function doRequest($uri) {
 
@@ -107,18 +108,95 @@ class ApiService {
         [
           'headers' => [
             'Authorization' => $this->header,
-          ]
+          ],
         ]
       );
 
     return json_decode($make_request->getBody());
   }
 
-  public function getFolders(){
-    return $this->doRequest(self::API_URL_FOLDER);
+  /**
+   * Get media cached folders from Skyfish API.
+   *
+   * @return array
+   *   Array of Skyfish folders.
+   */
+  public function getFolders() {
+    $cache_id = 'folders_' . $this->user->id();
+
+    $cache = \Drupal::cache()->get($cache_id);
+    if (empty($cache->data)) {
+      $folders = $this->getFoldersWithoutCache();
+
+      if (!empty($folders)) {
+        // @TODO set timestamp for cache
+        \Drupal::cache()->set($cache_id, $folders);
+      }
+
+      return $folders;
+    }
+
+    return $cache->data ?? [];
   }
 
-  public function getImages(){
-    return $this->doRequest(self::API_URL_IMAGES);
+  /**
+   * Get folders from Skyfish API.
+   *
+   * @return array
+   *   Array of Skyfish folders.
+   */
+  public function getFoldersWithoutCache() {
+    $folders = $this->doRequest(self::API_URL_FOLDER);
+    return $folders;
   }
+
+  /**
+   * @return array|null
+   */
+  public function getImagesInFolder(int $folder_id) {
+    $cache_id = 'images_' . $folder_id . '_' . $this->user->id();
+    $cache = \Drupal::cache()->get($cache_id);
+    if (empty($cache->data)) {
+      $images = $this->getImagesInFolderWithoutCache($folder_id);
+
+      if (!empty($images)) {
+        // @TODO set timestamp for cache
+        \Drupal::cache()->set($cache_id, $images);
+      }
+
+      return $images;
+
+    }
+
+    return $cache->data ?? [];
+  }
+
+  /**
+   * Get images from Skyfish API.
+   */
+  public function getImagesInFolderWithoutCache(int $folder_id) {
+    $response = $this->doRequest(self::API_URL_SEARCH . $folder_id);
+    $images = $response->response->media ?? [];
+
+    return $images;
+  }
+
+  public function getImagesMetadata() {
+    // @todo: run loop through each SELECTED image in array.
+    // @todo: get single image metadata (see $this->getImageMetadata($image_id))
+    // @todo: if no data - thow an error.
+    // @todo return images array with images names/download links.
+
+  }
+
+  public function getImageMetadata() {
+    // @todo: get image name from skyfish api.
+
+    // @todo:get image download link from skyfish api.
+
+    // @todo: if no image/download link - throw an error.
+
+    // @todo: return image name/dowload link.
+  }
+
 }

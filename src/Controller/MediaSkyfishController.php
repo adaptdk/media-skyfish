@@ -12,7 +12,7 @@ class MediaSkyfishController extends ControllerBase {
   /**
    * Hello.
    *
-   * @return string
+   * @return array
    *   Return Hello string.
    */
   public function hello() {
@@ -21,13 +21,10 @@ class MediaSkyfishController extends ControllerBase {
      * @var \Drupal\media_skyfish\ApiService $connect
      */
     $connect = \Drupal::service('media_skyfish.apiservice');
-    $token = $connect->getFolders();
-    dpm($token);
-
 
     return [
       '#type' => 'markup',
-      '#markup' => $this->t('Implement method: hello with parameter(s): ' . $token),
+      '#markup' => 'Test folders id: 946499 and 949137',
     ];
   }
 

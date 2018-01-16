@@ -62,7 +62,7 @@ class ConfigService {
   /**
    * Initialize function checks if user entered Skyfish data, if not global Skyfish for the site is used.
    */
-  private function initialize(){
+  private function initialize() {
     $this->key = empty($this->config->get('media_skyfish_api_key')) ?
       $this->user->field_skyfish_api_user->value : $this->config->get('media_skyfish_api_key');
     $this->secret = empty($this->config->get('media_skyfish_api_secret')) ?
@@ -139,10 +139,10 @@ class ConfigService {
    * Set username to login to Skyfish.
    *
    * @param string $username
-   *  Skyfish username.
+   *   Skyfish username.
    *
    * @return $this
-   *  ConfigService.
+   *   ConfigService.
    */
   public function setUsername(string $username): ConfigService {
     $this->username = $username;
@@ -163,10 +163,10 @@ class ConfigService {
    * Set password to login to Skyfish.
    *
    * @param string $password
-   *  Skyfish password.
+   *   Skyfish password.
    *
    * @return $this
-   *  ConfigService.
+   *   ConfigService.
    */
   public function setPassword(string $password): ConfigService {
     $this->password = $password;
@@ -178,7 +178,7 @@ class ConfigService {
    * @return string
    */
   public function getHmac() {
-    return hash_hmac('sha1', $this->key . ':' .time(), $this->secret );
+    return hash_hmac('sha1', $this->key . ':' . time(), $this->secret);
   }
 
 }
