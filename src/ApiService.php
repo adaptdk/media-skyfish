@@ -181,22 +181,34 @@ class ApiService {
     return $images;
   }
 
-  public function getImagesMetadata() {
-    // @todo: run loop through each SELECTED image in array.
-    // @todo: get single image metadata (see $this->getImageMetadata($image_id))
-    // @todo: if no data - thow an error.
-    // @todo return images array with images names/download links.
+  public function getImagesMetadata(array $images) {
+    foreach ($images as $image_id => $image) {
+      if (FALSE === $metadata = $this->getImageMetadata($image)) {
+        unset($images[$image_id]);
+      }
 
+      $images[$image_id] = $metadata;
+    }
+
+    return $images;
   }
 
-  public function getImageMetadata() {
-    // @todo: get image name from skyfish api.
+  public function getImageMetadata(object $image) {
+    $image->title = ''; // @todo: get image name from skyfish api.
+    $image->download_url = ''; // @todo:get image download link from skyfish api.
 
-    // @todo:get image download link from skyfish api.
 
-    // @todo: if no image/download link - throw an error.
+    if ($image->download_url === FALSE) {
+      // @todo: if no image/download link - throw an error.
 
-    // @todo: return image name/dowload link.
+      return FALSE;
+    }
+
+    if($image->title === FALSE) {
+      $image->title = $image->unique_media_id;
+    }
+
+    return $image;
   }
 
 }

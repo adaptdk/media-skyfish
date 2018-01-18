@@ -4,6 +4,7 @@ namespace Drupal\media_skyfish\Plugin\EntityBrowser\Widget;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\entity_browser\Plugin\EntityBrowser\Widget\Upload;
+use Drupal\file\Entity\File;
 
 /**
  * Plugin implementation of the 'skyfish' widget.
@@ -26,16 +27,121 @@ class SkyfishWidget extends Upload {
 
   public function getForm(array &$original_form, FormStateInterface $form_state, array $additional_widget_parameters) {
     $form = parent::getForm($original_form, $form_state, $additional_widget_parameters);
+
+    unset($form['upload']);
+
     // @TODO this goes to construct?
     $connect = \Drupal::service('media_skyfish.apiservice');
     // @todo: get folders/images from api.
     $folders = $connect->getFolders();
-    $images = $connect->getImagesInFolder();
 
-    // @todo: add submit method to save selected images in drupal.
+    if (empty($folders)) {
+      $form['message'] = [
+        '#type' => 'item',
+        '#prefix' => '<p>',
+        '#markup' => isset($folders->message) ? $folders->message : $this->t('Error while getting data'),
+        '#suffix' => '</p>',
+      ];
+    }
+
+    $form['skyfish'] = [
+      '#type' => 'container',
+    ];
+
+    foreach ($folders as $folder) {
+      $images = $connect->getImagesInFolder($folder->id);
+      if (empty($images)) {
+        continue;
+      }
+      $form['skyfish'][$folder->name] = [
+        '#type' => 'details',
+        '#group' => 'skyfish',
+        '#title' => $folder->name,
+      ];
+
+      foreach ($images as $image) {
+        $form['skyfish'][$folder->name][$image->unique_media_id] = [
+          '#type' => 'checkbox',
+          '#title' => $image->unique_media_id,
+        ];
+      }
+    }
 
     return $form;
   }
+
+  public function submit(array &$element, array &$form, FormStateInterface $form_state) {
+
+    $filesystem = \Drupal::service('file_system');
+
+    $form_values = $form_state->getValues();
+    $connect = \Drupal::service('media_skyfish.apiservice');
+    $folders = $connect->getFolders();
+    $media = [];
+
+    foreach ($folders as $folder) {
+      $images = $connect->getImagesInFolder($folder->id);
+
+      foreach ($images as $image_id => $image) {
+        if (isset($form_values[$image->unique_media_id]) && $form_values[$image->unique_media_id] === 1) {
+          $media[$image_id] = $image;
+        }
+      }
+
+
+    }
+
+    dpm(['atfiltruota', $media]);
+    $images_with_metadata = $connect->getImagesMetadata($media);
+    dpm(['su metadata', $images_with_metadata]);
+    $saved_images = $this->saveImages($images_with_metadata);
+    dpm(['issaugoti', $saved_images]);
+  }
+
+  protected function saveImages(array $images) {
+
+    foreach ($images as $image_id => $image) {
+      $images[$image_id] = $this->saveImage($image);
+    }
+
+    return $images;
+  }
+
+  protected function saveImage(object $image) {
+
+    $file = $this->saveFile($image);
+
+    $media = $this->saveMediaFile($file);
+
+    return $media;
+  }
+
+  protected function saveFile(array $image) {
+    /*$save_image = File::create();
+          $save_image->setFileUri($image->thumbnail_url);
+          $save_image->setOwnerId(1);
+          $save_image->setMimeType('image/jpg');
+          $save_image->setFilename($image->unique_media_id);
+          $save_image->setPermanent();
+          $save_image->save();*/
+  }
+
+  protected function saveMediaFile(File $file) {
+    /*// Create media entity with saved file.
+    $image_media = Media::create([
+      'bundle' => 'image',
+      'uid' => \Drupal::currentUser()->id(),
+      'langcode' => \Drupal::languageManager()->getDefaultLanguage()->getId(),
+      'status' => Media::PUBLISHED,
+      'field_image' => [
+        'target_id' => $image->id(),
+        'alt' => t('Placeholder image'),
+        'title' => t('Placeholder image'),
+      ],
+    ]);
+    $image_media->save();*/
+  }
+
 
   // @todo: add submit method to save images in drupal
 
