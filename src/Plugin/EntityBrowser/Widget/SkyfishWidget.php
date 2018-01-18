@@ -117,13 +117,14 @@ class SkyfishWidget extends Upload {
   }
 
   protected function saveFile(array $image) {
-    /*$save_image = File::create();
-          $save_image->setFileUri($image->thumbnail_url);
-          $save_image->setOwnerId(1);
-          $save_image->setMimeType('image/jpg');
-          $save_image->setFilename($image->unique_media_id);
-          $save_image->setPermanent();
-          $save_image->save();*/
+    $filesystem = \Drupal::service('file_system');
+    $save_image = File::create();
+    $save_image->setFileUri('public://skyfish/');
+    $save_image->setOwnerId(1);
+    $save_image->setMimeType('image/jpg');
+    $save_image->setFilename($image->unique_media_id);
+    $save_image->setPermanent();
+    $save_image->save();
   }
 
   protected function saveMediaFile(File $file) {

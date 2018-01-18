@@ -211,4 +211,8 @@ class ApiService {
     return $image;
   }
 
+//  public function getImageTitle() {
+//
+//  }
+
 }
