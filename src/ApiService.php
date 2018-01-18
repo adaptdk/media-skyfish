@@ -193,10 +193,10 @@ class ApiService {
     return $images;
   }
 
-  public function getImageMetadata(object $image) {
-    $image->title = ''; // @todo: get image name from skyfish api.
-    $image->download_url = ''; // @todo:get image download link from skyfish api.
-
+  public function getImageMetadata($image) {
+    $image->title = $this->getImageTitle($image->unique_media_id);
+    $image->download_url = $this->getImageDownloadUrl($image->unique_media_id);
+    $image->filename = $this->getFilename($image->unique_media_id);
 
     if ($image->download_url === FALSE) {
       // @todo: if no image/download link - throw an error.
@@ -204,15 +204,41 @@ class ApiService {
       return FALSE;
     }
 
-    if($image->title === FALSE) {
+    if ($image->title === FALSE) {
       $image->title = $image->unique_media_id;
     }
 
     return $image;
   }
 
-//  public function getImageTitle() {
-//
-//  }
+  /**
+   * @param $img_id
+   *
+   * @return bool|string
+   */
+  public function getImageTitle($img_id) {
+    $request = $this->doRequest('/media/' . $img_id);
+    $full_filename = $request->filename;
+    $filename = substr($full_filename, 0, (strrpos($full_filename, ".")));
+
+    return $filename;
+  }
+
+  public function getFilename($img_id) {
+    $request = $this->doRequest('/media/' . $img_id);
+
+    return $request->filename;
+  }
+
+  /**
+   * @param $img_id
+   *
+   * @return mixed
+   */
+  public function getImageDownloadUrl($img_id) {
+    $request = $this->doRequest('/media/' . $img_id . '/download_location');
+
+    return $request->url;
+  }
 
 }

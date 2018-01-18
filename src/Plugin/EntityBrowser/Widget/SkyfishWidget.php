@@ -71,9 +71,6 @@ class SkyfishWidget extends Upload {
   }
 
   public function submit(array &$element, array &$form, FormStateInterface $form_state) {
-
-    $filesystem = \Drupal::service('file_system');
-
     $form_values = $form_state->getValues();
     $connect = \Drupal::service('media_skyfish.apiservice');
     $folders = $connect->getFolders();
@@ -88,14 +85,13 @@ class SkyfishWidget extends Upload {
         }
       }
 
-
     }
 
     dpm(['atfiltruota', $media]);
     $images_with_metadata = $connect->getImagesMetadata($media);
     dpm(['su metadata', $images_with_metadata]);
     $saved_images = $this->saveImages($images_with_metadata);
-    dpm(['issaugoti', $saved_images]);
+//    dpm(['issaugoti', $saved_images]);
   }
 
   protected function saveImages(array $images) {
@@ -107,24 +103,32 @@ class SkyfishWidget extends Upload {
     return $images;
   }
 
-  protected function saveImage(object $image) {
-
+  protected function saveImage($image) {
     $file = $this->saveFile($image);
-
     $media = $this->saveMediaFile($file);
 
     return $media;
   }
 
-  protected function saveFile(array $image) {
+  public function fileDefaultScheme() {
+    return \Drupal::config('system.file')->get('default_scheme');
+  }
+
+  protected function saveFile(\stdClass $image) {
+    dpm(['title', $image]);
     $filesystem = \Drupal::service('file_system');
+    $user = \Drupal::currentUser()->id();
+    $destination = $this->fileDefaultScheme() . '://media-skyfish/' . $user . '/' . $image->title;
+    $file_name = $this->fileDefaultScheme() . '://media-skyfish/' . $user . '/' . $image->filename;
     $save_image = File::create();
-    $save_image->setFileUri('public://skyfish/');
-    $save_image->setOwnerId(1);
-    $save_image->setMimeType('image/jpg');
-    $save_image->setFilename($image->unique_media_id);
+    $save_image->setFileUri($destination);
+    $save_image->setOwnerId($user);
+    $save_image->setMimeType('image/' . pathinfo($file_name, PATHINFO_EXTENSION));
+    $save_image->setFilename($filesystem->basename($destination));
     $save_image->setPermanent();
     $save_image->save();
+
+    return $save_image;
   }
 
   protected function saveMediaFile(File $file) {
