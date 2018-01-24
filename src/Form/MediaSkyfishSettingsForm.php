@@ -11,6 +11,12 @@ use Drupal\Core\Render\Element\Password;
  */
 class MediaSkyfishSettingsForm extends ConfigFormBase {
 
+  /**
+   * Skyfish configs.
+   *
+   * @return array
+   *   Array of configs.
+   */
   protected function getEditableConfigNames() {
     return [
       'media_skyfish.adminconfig'
@@ -65,6 +71,16 @@ class MediaSkyfishSettingsForm extends ConfigFormBase {
       '#size' => 128,
       '#default_value' => $config->get('media_skyfish_api_secret'),
     ];
+    $form['skyfish_global_api']['media_skyfish_cache'] = [
+      '#type' => 'textfield',
+      '#attributes' => [
+        ' type' => 'number',
+      ],
+      '#title' => $this->t('Cache time in minutes'),
+      '#description' => $this->t('Set how long images will be saved in cache.'),
+      '#maxlength' => 3,
+      '#default_value' => $config->get('media_skyfish_cache'),
+    ];
 
     return parent::buildForm($form, $form_state);
   }
@@ -72,15 +88,7 @@ class MediaSkyfishSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm($form, $form_state);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // Display result.
     parent::submitForm($form, $form_state);
 
     $this->config('media_skyfish.adminconfig')
@@ -88,6 +96,7 @@ class MediaSkyfishSettingsForm extends ConfigFormBase {
       ->set('media_skyfish_api_secret', $form_state->getValue('media_skyfish_api_secret'))
       ->set('media_skyfish_global_user', $form_state->getValue('media_skyfish_global_user'))
       ->set('media_skyfish_global_password', $form_state->getValue('media_skyfish_global_password'))
+      ->set('media_skyfish_cache', $form_state->getValue('media_skyfish_cache'))
       ->save();
   }
 

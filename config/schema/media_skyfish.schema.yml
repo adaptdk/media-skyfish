@@ -13,3 +13,6 @@ media_skyfish.adminconfig:
     media_skyfish_global_password:
       type: string
       label: 'Password'
+    media_skyfish_cache:
+      type: string
+      label: 'Cache time'

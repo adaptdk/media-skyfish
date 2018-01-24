@@ -10,11 +10,15 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 class ConfigService {
 
   /**
+   * Skyfish admin form configs.
+   *
    * @var \Drupal\Core\Config\ImmutableConfig
    */
   protected $config;
 
   /**
+   * Currently logged in user.
+   *
    * @var \Drupal\Core\Entity\EntityInterface|null
    */
   protected $user;
@@ -51,16 +55,16 @@ class ConfigService {
    * ConfigService constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   A configuration array containing information about the plugin instance.
    */
   public function __construct(ConfigFactoryInterface $config_factory) {
     $this->config = $config_factory->get('media_skyfish.adminconfig');
-    //TODO add service for bellow code
     $this->user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
     $this->initialize();
   }
 
   /**
-   * Initialize function checks if user entered Skyfish data, if not global Skyfish for the site is used.
+   * Initialize function checks if user's or global data should be user.
    */
   private function initialize() {
     $this->key = empty($this->config->get('media_skyfish_api_key')) ?
@@ -77,6 +81,7 @@ class ConfigService {
    * Get Skyfish api key.
    *
    * @return string
+   *   Skyfish api key.
    */
   public function getKey(): string {
     return $this->key;
@@ -86,6 +91,7 @@ class ConfigService {
    * Set Skyfish api key.
    *
    * @param string $key
+   *   Skyfish api key.
    *
    * @return $this
    */
@@ -99,6 +105,7 @@ class ConfigService {
    * Check if key is not empty.
    *
    * @return bool
+   *   If not empty return key.
    */
   public function hasKey() {
     return !empty($this->key);
@@ -108,6 +115,7 @@ class ConfigService {
    * Get Skyfish secret api key.
    *
    * @return string
+   *   Skyfish api secret.
    */
   public function getSecret(): string {
     return $this->secret;
@@ -117,6 +125,7 @@ class ConfigService {
    * Set Skyfish secret api key.
    *
    * @param string $secret
+   *   Skifish api secret.
    *
    * @return $this
    */
@@ -130,6 +139,7 @@ class ConfigService {
    * Get Skyfish username.
    *
    * @return string
+   *   Username.
    */
   public function getUsername(): string {
     return $this->username;
@@ -154,6 +164,7 @@ class ConfigService {
    * Get password to login to Skyfish.
    *
    * @return string
+   *   Password for the Skyfish.
    */
   public function getPassword(): string {
     return $this->password;
@@ -175,7 +186,20 @@ class ConfigService {
   }
 
   /**
+   * Get cache time.
+   *
+   * @return array|mixed|null
+   *   Cache time.
+   */
+  public function getCacheTime() {
+    return $this->config->get('media_skyfish_cache');
+  }
+
+  /**
+   * Get hmac for authentication.
+   *
    * @return string
+   *   Hmac string.
    */
   public function getHmac() {
     return hash_hmac('sha1', $this->key . ':' . time(), $this->secret);
