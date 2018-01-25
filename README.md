@@ -1,8 +1,8 @@
 INTRODUCTION
 ------------
 This project provides <a href="skyfish.com">skyfish</a> 
-integration to media module.
-It allows you to use any image uploaded to Skyfish via media browser. 
+integration.
+It allows you to use any image uploaded to Skyfish via entity browser. 
 Chosen image form image browser are stored locally, 
 that it could have full functionality as local images 
 (styles, attributes and etc), 
@@ -14,14 +14,13 @@ which will be used for all users if they won't provide their onw key and secret.
 REQUIREMENTS
 ------------
 This module requires the following module:
- * Views (https://drupal.org/project/media
+ * Entity browser (https://www.drupal.org/project/entity_browser).
+ * Chaos tool suite (https://www.drupal.org/project/ctools).
 
 
  INSTALLATION
 ------------
- * Install as you would normally install a contributed Drupal module. See:
-   https://drupal.org/documentation/install/modules-themes/modules-7
-   for further information.
+ * Install as you would normally install a contributed Drupal module.
 
 
 CONFIGURATION
@@ -29,13 +28,20 @@ CONFIGURATION
  * Global key can be added at <strong>admin/config/media/media_skyfish</strong> 
  * by users who has a "Configure Global Media Skyfish settings" permission.
  * All users which has a "Configure own Media Skyfish settings" permission 
- * can add their keys here <strong>user/%uid/skyfish</strong>
+ * can add their keys here <strong>admin/config/media/media_skyfish/user_settings</strong>
+ -----------
+ * create entity browser at <strong>admin/config/content/entity_browser</strong> with selected widget - Skyfsh
+ * add Image field
+ * change form display widget to <strong>Entity browser</strong>
+ * on widget settings select and save created entity browser with Skyfish widget
+ 
 
 
 MAINTAINERS
 -----------
 Current maintainers:
  * Andrius P. (andriuzss) - https://drupal.org/user/2938417
+ * Edgaras D. (edgarasda) - https://www.drupal.org/user/3557607/
 
 This project has been sponsored by:
  * Adapt A/S - https://www.drupal.org/node/1897408
