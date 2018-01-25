@@ -15,7 +15,7 @@ class MediaSkyfishSettingsForm extends ConfigFormBase {
    * Skyfish configs.
    *
    * @return array
-   *   Array of configs.
+   *   Array of Skyfish configs.
    */
   protected function getEditableConfigNames() {
     return [
@@ -75,6 +75,9 @@ class MediaSkyfishSettingsForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#attributes' => [
         ' type' => 'number',
+        ' min' => 0,
+        ' max' => 999,
+        ' step' => 1,
       ],
       '#title' => $this->t('Cache time in minutes'),
       '#description' => $this->t('Set how long images will be saved in cache.'),

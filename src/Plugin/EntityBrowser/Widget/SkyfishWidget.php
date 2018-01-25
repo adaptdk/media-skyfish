@@ -2,8 +2,15 @@
 
 namespace Drupal\media_skyfish\Plugin\EntityBrowser\Widget;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Utility\Token;
 use Drupal\entity_browser\Plugin\EntityBrowser\Widget\Upload;
+use Drupal\entity_browser\WidgetValidationManager;
+use Drupal\media_skyfish\ApiService;
+use Drupal\media_skyfish\ConfigService;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Plugin implementation of the 'skyfish' widget.
@@ -16,6 +23,32 @@ use Drupal\entity_browser\Plugin\EntityBrowser\Widget\Upload;
  * )
  */
 class SkyfishWidget extends Upload {
+
+  /**
+   * Drupal logger service.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
+   * Skyfish api service.
+   *
+   * @var \Drupal\media_skyfish\ApiService
+   */
+  protected $connect;
+
+  /**
+   * SkyfishWidget constructor.
+   *
+   * {@inheritdoc}
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher, \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager, \Drupal\entity_browser\WidgetValidationManager $validation_manager, \Drupal\Core\Extension\ModuleHandlerInterface $module_handler, \Drupal\Core\Utility\Token $token) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $event_dispatcher, $entity_type_manager, $validation_manager, $module_handler, $token);
+
+    $this->logger = \Drupal::service('logger.channel.media_skyfish');
+    $this->connect = \Drupal::service('media_skyfish.apiservice');
+  }
 
   /**
    * {@inheritdoc}
@@ -36,8 +69,7 @@ class SkyfishWidget extends Upload {
 
     unset($form['upload']);
 
-    $connect = \Drupal::service('media_skyfish.apiservice');
-    $folders = $connect->getFolders();
+    $folders = $this->connect->getFolders();
 
     if (empty($folders)) {
       $form['message'] = [
@@ -49,27 +81,46 @@ class SkyfishWidget extends Upload {
     }
 
     $form['skyfish'] = [
-      '#type' => 'container',
+      '#type' => 'vertical_tabs',
+      '#default_tab' => str_replace('_', '-', 'edit_folder_' . $folders[0]->id),
+      '#attributes' => [
+        'class' => [
+          'skyfish',
+        ],
+      ],
     ];
 
     foreach ($folders as $folder) {
-      $images = $connect->getImagesInFolder($folder->id);
+      $images = $this->connect->getImagesInFolder($folder->id);
       if (empty($images)) {
         continue;
       }
-      $form['skyfish'][$folder->name] = [
+      $form['folder_' . $folder->id] = [
         '#type' => 'details',
         '#group' => 'skyfish',
         '#title' => $folder->name,
+        '#attributes' => [
+          'class' => [
+            'skyfish__folder',
+            'folder',
+          ],
+        ],
       ];
 
       foreach ($images as $image) {
-        $form['skyfish'][$folder->name][$image->unique_media_id] = [
+        $form['folder_' . $folder->id][$image->unique_media_id] = [
           '#type' => 'checkbox',
-          '#title' => '<img src="' . $image->thumbnail_url . '">',
+          '#title' => '<img src="' . $image->thumbnail_url . '" class="image__thumbnail">',
+          '#attributes' => [
+            'class' => [
+              'folder__image',
+              'image',
+            ],
+          ],
         ];
       }
     }
+    $form['#attached']['library'][] = 'media_skyfish/pager';
 
     return $form;
   }
@@ -79,12 +130,11 @@ class SkyfishWidget extends Upload {
    */
   public function submit(array &$element, array &$form, FormStateInterface $form_state) {
     $form_values = $form_state->getValues();
-    $connect = \Drupal::service('media_skyfish.apiservice');
-    $folders = $connect->getFolders();
+    $folders = $this->connect->getFolders();
     $media = [];
 
     foreach ($folders as $folder) {
-      $images = $connect->getImagesInFolder($folder->id);
+      $images = $this->connect->getImagesInFolder($folder->id);
 
       foreach ($images as $image_id => $image) {
         if (isset($form_values[$image->unique_media_id]) && $form_values[$image->unique_media_id] === 1) {
@@ -94,9 +144,8 @@ class SkyfishWidget extends Upload {
 
     }
 
-    $images_with_metadata = $connect->getImagesMetadata($media);
+    $images_with_metadata = $this->connect->getImagesMetadata($media);
     $saved_images = $this->saveImages($images_with_metadata);
-
     $this->selectEntities($saved_images, $form_state);
 
   }
@@ -145,7 +194,7 @@ class SkyfishWidget extends Upload {
     $file = file_save_data($data, $destination);
 
     if (!$file) {
-      // @todo: throw an error;
+      $this->logger->error('Unable to save file for @image', ['@image' => $image->filename]);
     }
     return $file;
   }

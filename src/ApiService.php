@@ -4,9 +4,10 @@ namespace Drupal\media_skyfish;
 
 use Drupal\Core\Session\AccountInterface;
 use GuzzleHttp\Client;
+use Psr\Log\LoggerInterface;
 
 /**
- * Class ApiService.
+ * Service that connects to and get data from Skyfish.
  *
  * @package Drupal\media_skyfish
  */
@@ -49,6 +50,13 @@ class ApiService {
   protected $account;
 
   /**
+   * Drupal logger service.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * Construct ApiService.
    *
    * @param \GuzzleHttp\Client $client
@@ -57,12 +65,16 @@ class ApiService {
    *   Config service for Skyfish API authorization and settings.
    * @param \Drupal\Core\Session\AccountInterface $account
    *   Drupal user account interface.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   Loger service.
    */
-  public function __construct(Client $client, ConfigService $config_service, AccountInterface $account) {
+  public function __construct(Client $client, ConfigService $config_service, AccountInterface $account, LoggerInterface $logger) {
     $this->config = $config_service;
     $this->client = $client;
     $this->header = $this->getHeader();
     $this->user = $account;
+    $this->cache = $this->config->getCacheTime();
+    $this->logger = $logger;
   }
 
   /**
@@ -73,22 +85,31 @@ class ApiService {
    */
   public function getToken() {
 
-    $request = $this
-      ->client
-      ->request('POST',
-        self::API_BASE_URL . '/authenticate/userpasshmac',
-        [
-          'json' =>
+    try {
+      $request = $this
+        ->client
+        ->request('POST',
+          self::API_BASE_URL . '/authenticate/userpasshmac',
           [
-            'username' => $this->config->getUsername(),
-            'password' => $this->config->getPassword(),
-            'key' => $this->config->getKey(),
-            'ts' => time(),
-            'hmac' => $this->config->getHmac(),
-          ],
-        ]);
+            'json' =>
+              [
+                'username' => $this->config->getUsername(),
+                'password' => $this->config->getPassword(),
+                'key' => $this->config->getKey(),
+                'ts' => time(),
+                'hmac' => $this->config->getHmac(),
+              ],
+          ]);
+      $response = json_decode($request->getBody()->getContents(), TRUE);
+    }
+    catch (\Exception $e) {
+      return FALSE;
+    }
 
-    $response = json_decode($request->getBody()->getContents(), TRUE);
+    if ($request->getStatusCode() !== 200) {
+      $this->handleRequestError($request->getStatusCode());
+      return NULL;
+    }
 
     return $response['token'] ?? FALSE;
   }
@@ -120,19 +141,70 @@ class ApiService {
    */
   protected function doRequest($uri) {
 
-    $make_request = $this
-      ->client
-      ->request(
-        'GET',
-        self::API_BASE_URL . $uri,
-        [
-          'headers' => [
-            'Authorization' => $this->header,
-          ],
-        ]
-      );
+    try {
+      $request = $this
+        ->client
+        ->request(
+          'GET',
+          self::API_BASE_URL . $uri,
+          [
+            'headers' => [
+              'Authorization' => $this->header,
+            ],
+          ]
+        );
+    }
+    catch (\Exception $e) {
+      return NULL;
+    }
 
-    return json_decode($make_request->getBody());
+    if ($request->getStatusCode() !== 200) {
+      $this->handleRequestError($request->getStatusCode());
+      return NULL;
+    }
+
+    return json_decode($request->getBody());
+  }
+
+  /**
+   * Log error on request error.
+   *
+   * @param int $status_code
+   *   HTTP status code.
+   */
+  protected function handleRequestError($status_code) {
+    switch ($status_code) {
+      case 400:
+        $message = 'Your request contains bad syntax and the API could not understand it.';
+        break;
+
+      case 401:
+        $message = 'You need to be logged in to access the resource';
+        break;
+
+      case 403:
+        $message = 'You do not have access to this resource. It will help to authenticate.';
+        break;
+
+      case 404:
+        $message = 'The requested resource does not exist. This is also returned if the method is not allowed on the resource.';
+        break;
+
+      case 409:
+        $message = 'We encountered a conflict when trying to process your update. Try applying your update again.';
+        break;
+
+      case 500:
+        $message = 'We encountered a problem parsing your request and can not say what went wrong. Please provide us with the “X-Cbx-Request-Id” from the response as it will help us debug the problem.';
+        break;
+
+      default:
+        $message = FALSE;
+    }
+
+    if ($message !== FALSE) {
+      $this->logger->error($message);
+    }
   }
 
   /**
@@ -143,15 +215,13 @@ class ApiService {
    */
   public function getFolders() {
     $cache_id = 'folders_' . $this->user->id();
-    $cache_time = $this->config->getCacheTime();
 
     $cache = \Drupal::cache()->get($cache_id);
     if (empty($cache->data)) {
       $folders = $this->getFoldersWithoutCache();
 
       if (!empty($folders)) {
-        // @TODO set timestamp for cache
-        \Drupal::cache()->set($cache_id, $folders, $cache_time);
+        \Drupal::cache()->set($cache_id, $folders, time() + $this->cache * 60);
       }
 
       return $folders;
@@ -184,8 +254,7 @@ class ApiService {
       $images = $this->getImagesInFolderWithoutCache($folder_id);
 
       if (!empty($images)) {
-        // @TODO set timestamp for cache
-        \Drupal::cache()->set($cache_id, $images);
+        \Drupal::cache()->set($cache_id, $images, time() + $this->cache * 60);
       }
 
       return $images;
@@ -235,19 +304,30 @@ class ApiService {
   /**
    * Set metadata for the image.
    *
-   * @param $image
+   * @param \stdClass $image
    *   Skyfish image.
    *
    * @return bool
    *   If image title empty display Skyfish id.
    */
-  public function getImageMetadata($image) {
+  public function getImageMetadata(\stdClass $image) {
     $image->title = $this->getImageTitle($image->unique_media_id);
     $image->download_url = $this->getImageDownloadUrl($image->unique_media_id);
     $image->filename = $this->getFilename($image->unique_media_id);
 
     if ($image->download_url === FALSE) {
-      // @todo: if no image/download link - throw an error.
+      $this->logger('Image (@image) does not exist. @url does not exist', [
+        '@image' => $image->unique_media_id,
+        '@url' => $image->download_url,
+      ]);
+
+      drupal_set_message(
+        $this->t('Image does not exist. Image download url does not exist.', [
+          '@image' => $image->unique_media_id,
+          '@url' => $image->download_url,
+        ]),
+        'error'
+      );
 
       return FALSE;
     }

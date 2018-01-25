@@ -3,6 +3,7 @@
 namespace Drupal\media_skyfish;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class ConfigService.
@@ -52,29 +53,39 @@ class ConfigService {
   protected $password;
 
   /**
+   * Drupal logger service.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * ConfigService constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   A configuration array containing information about the plugin instance.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   Logger service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerInterface $logger) {
     $this->config = $config_factory->get('media_skyfish.adminconfig');
     $this->user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
+    $this->logger = $logger;
     $this->initialize();
   }
 
   /**
-   * Initialize function checks if user's or global data should be user.
+   * Initialize function checks if user's or global data should be used.
    */
   private function initialize() {
-    $this->key = empty($this->config->get('media_skyfish_api_key')) ?
-      $this->user->field_skyfish_api_user->value : $this->config->get('media_skyfish_api_key');
-    $this->secret = empty($this->config->get('media_skyfish_api_secret')) ?
-      $this->user->field_skyfish_secret_api_key->value : $this->config->get('media_skyfish_api_secret');
-    $this->username = empty($this->config->get('media_skyfish_global_user')) ?
-      $this->user->field_skyfish_username->value : $this->config->get('media_skyfish_global_user');
-    $this->password = empty($this->config->get('media_skyfish_global_password')) ?
-      $this->user->field_skyfish_password->value : $this->config->get('media_skyfish_global_password');
+    $this->key = empty($this->user->field_skyfish_api_user->value) ?
+      $this->config->get('media_skyfish_api_key') : $this->user->field_skyfish_api_user->value;
+    $this->secret = empty($this->user->field_skyfish_secret_api_key->value) ?
+      $this->config->get('media_skyfish_api_secret') : $this->user->field_skyfish_secret_api_key->value;
+    $this->username = empty($this->user->field_skyfish_username->value) ?
+      $this->config->get('media_skyfish_global_user') : $this->user->field_skyfish_username->value;
+    $this->password = empty($this->user->field_skyfish_password->value) ?
+      $this->config->get('media_skyfish_global_password') : $this->user->field_skyfish_password->value;
   }
 
   /**
@@ -188,7 +199,7 @@ class ConfigService {
   /**
    * Get cache time.
    *
-   * @return array|mixed|null
+   * @return int|null
    *   Cache time.
    */
   public function getCacheTime() {
