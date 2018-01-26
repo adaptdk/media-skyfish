@@ -51,6 +51,9 @@ class SkyfishWidget extends Upload {
     $this->connect = $api_service;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
       $configuration,
@@ -152,23 +155,52 @@ class SkyfishWidget extends Upload {
    */
   public function submit(array &$element, array &$form, FormStateInterface $form_state) {
     $form_values = $form_state->getValues();
-    $folders = $this->connect->getFolders();
     $media = [];
+
+    // Get images from Skyfish API and map their metadata with selected values.
+    $this->selectImagesFromFolders($media, $form_values);
+
+    // Get images metadata and save them.
+    $images_with_metadata = $this->connect->getImagesMetadata($media);
+    $saved_images = $this->saveImages($images_with_metadata);
+    // Pass seleted images to the entity they are to be added to.
+    $this->selectEntities($saved_images, $form_state);
+  }
+
+  /**
+   * Get images from Skyfish API folders.
+   *
+   * @param array $media
+   *   Array of mapped images metadata from Skyfish API.
+   * @param array $form_values
+   *   Array of selected images to be downloaded from Skyfish API.
+   */
+  protected function selectImagesFromFolders(array &$media, array $form_values) {
+    $folders = $this->connect->getFolders();
 
     foreach ($folders as $folder) {
       $images = $this->connect->getImagesInFolder($folder->id);
-
-      foreach ($images as $image_id => $image) {
-        if (isset($form_values[$image->unique_media_id]) && $form_values[$image->unique_media_id] === 1) {
-          $media[$image_id] = $image;
-        }
-      }
-
+      $this->selectImagesFromFormValues($media, $form_values, $images);
     }
+  }
 
-    $images_with_metadata = $this->connect->getImagesMetadata($media);
-    $saved_images = $this->saveImages($images_with_metadata);
-    $this->selectEntities($saved_images, $form_state);
+  /**
+   * Map Skyfish API images metadata with selected values in form.
+   *
+   * @param array $media
+   *   Array of mapped images metadata from Skyfish API.
+   * @param array $form_values
+   *   Array of selected images to be downloaded from Skyfish API.
+   * @param array $images
+   *   Array of images metadata from Skyfish API.
+   */
+  protected function selectImagesFromFormValues(array &$media, array $form_values, array $images) {
+    foreach ($images as $image) {
+      if (isset($form_values[$image->unique_media_id]) &&
+        $form_values[$image->unique_media_id] === 1) {
+        $media[$image->unique_media_id] = $image;
+      }
+    }
   }
 
   /**
