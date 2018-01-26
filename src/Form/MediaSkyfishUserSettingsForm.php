@@ -19,7 +19,11 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  protected function getEditableConfigNames() {}
+  protected function getEditableConfigNames() {
+    // Do not save user sensitive configuration
+    // in any kind if exportable configs, so we return empty config array.
+    return [];
+  }
 
   /**
    * {@inheritdoc}
