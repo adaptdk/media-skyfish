@@ -101,10 +101,10 @@ class ConfigService {
   /**
    * Set Skyfish api key.
    *
-   * @param string $key
-   *   Skyfish api key.
+   * @param string
+   *   Skyfish API key.
    *
-   * @return $this
+   * @return \Drupal\media_skyfish\ConfigService $this
    */
   public function setKey(string $key): ConfigService {
     $this->key = $key;
@@ -116,7 +116,7 @@ class ConfigService {
    * Check if key is not empty.
    *
    * @return bool
-   *   If not empty return key.
+   *   If key is set, return TRUE, else FALSE.
    */
   public function hasKey() {
     return !empty($this->key);
@@ -136,7 +136,7 @@ class ConfigService {
    * Set Skyfish secret api key.
    *
    * @param string $secret
-   *   Skifish api secret.
+   *   Skyfish API secret key.
    *
    * @return $this
    */
@@ -150,7 +150,7 @@ class ConfigService {
    * Get Skyfish username.
    *
    * @return string
-   *   Username.
+   *   Skyfish API username.
    */
   public function getUsername(): string {
     return $this->username;
