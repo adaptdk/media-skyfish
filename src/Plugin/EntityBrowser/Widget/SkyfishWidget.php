@@ -10,6 +10,8 @@ use Drupal\entity_browser\Plugin\EntityBrowser\Widget\Upload;
 use Drupal\entity_browser\WidgetValidationManager;
 use Drupal\media_skyfish\ApiService;
 use Drupal\media_skyfish\ConfigService;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -43,11 +45,27 @@ class SkyfishWidget extends Upload {
    *
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher, \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager, \Drupal\entity_browser\WidgetValidationManager $validation_manager, \Drupal\Core\Extension\ModuleHandlerInterface $module_handler, \Drupal\Core\Utility\Token $token) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher, \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager, \Drupal\entity_browser\WidgetValidationManager $validation_manager, \Drupal\Core\Extension\ModuleHandlerInterface $module_handler, \Drupal\Core\Utility\Token $token, LoggerInterface $logger, ApiService $api_service) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $event_dispatcher, $entity_type_manager, $validation_manager, $module_handler, $token);
 
-    $this->logger = \Drupal::service('logger.channel.media_skyfish');
-    $this->connect = \Drupal::service('media_skyfish.apiservice');
+    $this->logger = $logger;
+    $this->connect = $api_service;
+  }
+
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $container,
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('event_dispatcher'),
+      $container->get('entity_type.manager'),
+      $container->get('plugin.manager.entity_browser.widget_validation'),
+      $container->get('module_handler'),
+      $container->get('token'),
+      $container->get('logger.channel.media_skyfish'),
+      $container->get('media_skyfish.apiservice')
+    );
   }
 
   /**
@@ -56,6 +74,8 @@ class SkyfishWidget extends Upload {
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
+    // Since we extend default entity_browser Upload widget,
+    // it contains unused configuration fields, so we remove them.
     unset($form['upload_location'], $form['extensions'], $form['multiple']);
 
     return $form;
@@ -67,6 +87,8 @@ class SkyfishWidget extends Upload {
   public function getForm(array &$original_form, FormStateInterface $form_state, array $additional_widget_parameters) {
     $form = parent::getForm($original_form, $form_state, $additional_widget_parameters);
 
+    // Since we extend default entity_browser Upload widget,
+    // it contains unused upload field, so we remove it.
     unset($form['upload']);
 
     $folders = $this->connect->getFolders();
