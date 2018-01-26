@@ -99,11 +99,11 @@ class ApiService {
           [
             'json' =>
               [
-                'username' => $this->config->getUsername(),
-                'password' => $this->config->getPassword(),
-                'key' => $this->config->getKey(),
+                'username' => $this->config->getUsername() ?? '',
+                'password' => $this->config->getPassword() ?? '',
+                'key' => $this->config->getKey() ?? '',
                 'ts' => time(),
-                'hmac' => $this->config->getHmac(),
+                'hmac' => $this->config->getHmac() ?? '',
               ],
           ]);
       $response = json_decode($request->getBody()->getContents(), TRUE);

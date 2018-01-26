@@ -54,7 +54,6 @@ class SkyfishWidget extends Upload {
 
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
-      $container,
       $configuration,
       $plugin_id,
       $plugin_definition,
