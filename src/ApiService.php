@@ -57,6 +57,13 @@ class ApiService {
   protected $logger;
 
   /**
+   * Cache limit in minutes.
+   *
+   * @var int|null
+   */
+  protected $cache;
+
+  /**
    * Construct ApiService.
    *
    * @param \GuzzleHttp\Client $client
@@ -84,7 +91,6 @@ class ApiService {
    *   Authorization token string or false if there was an error.
    */
   public function getToken() {
-
     try {
       $request = $this
         ->client
@@ -108,7 +114,7 @@ class ApiService {
 
     if ($request->getStatusCode() !== 200) {
       $this->handleRequestError($request->getStatusCode());
-      return NULL;
+      return FALSE;
     }
 
     return $response['token'] ?? FALSE;
@@ -136,11 +142,10 @@ class ApiService {
    * @param string $uri
    *   Request URL.
    *
-   * @return array|null
+   * @return array|bool
    *   Response body content.
    */
-  protected function doRequest($uri) {
-
+  protected function doRequest(string $uri) {
     try {
       $request = $this
         ->client
@@ -155,12 +160,12 @@ class ApiService {
         );
     }
     catch (\Exception $e) {
-      return NULL;
+      return FALSE;
     }
 
     if ($request->getStatusCode() !== 200) {
       $this->handleRequestError($request->getStatusCode());
-      return NULL;
+      return FALSE;
     }
 
     return json_decode($request->getBody());
@@ -172,45 +177,25 @@ class ApiService {
    * @param int $status_code
    *   HTTP status code.
    */
-  protected function handleRequestError($status_code) {
-    switch ($status_code) {
-      case 400:
-        $message = 'Your request contains bad syntax and the API could not understand it.';
-        break;
+  protected function handleRequestError(int $status_code) {
+    $messages = [
+      400 => 'Your request contains bad syntax and the API could not understand it.',
+      401 => 'You need to be logged in to access the resource',
+      403 => 'You do not have access to this resource. It will help to authenticate.',
+      404 => 'The requested resource does not exist. This is also returned if the method is not allowed on the resource.',
+      409 => 'We encountered a conflict when trying to process your update. Try applying your update again.',
+      500 => 'We encountered a problem parsing your request and can not say what went wrong. Please provide us with the “X-Cbx-Request-Id” from the response as it will help us debug the problem.',
+    ];
 
-      case 401:
-        $message = 'You need to be logged in to access the resource';
-        break;
-
-      case 403:
-        $message = 'You do not have access to this resource. It will help to authenticate.';
-        break;
-
-      case 404:
-        $message = 'The requested resource does not exist. This is also returned if the method is not allowed on the resource.';
-        break;
-
-      case 409:
-        $message = 'We encountered a conflict when trying to process your update. Try applying your update again.';
-        break;
-
-      case 500:
-        $message = 'We encountered a problem parsing your request and can not say what went wrong. Please provide us with the “X-Cbx-Request-Id” from the response as it will help us debug the problem.';
-        break;
-
-      default:
-        $message = FALSE;
-    }
-
-    if ($message !== FALSE) {
-      $this->logger->error($message);
+    if (isset($messages[$status_code])) {
+      $this->logger->error($messages[$status_code]);
     }
   }
 
   /**
    * Get media cached folders from Skyfish API.
    *
-   * @return array
+   * @return array $folders
    *   Array of Skyfish folders.
    */
   public function getFolders() {
@@ -233,7 +218,7 @@ class ApiService {
   /**
    * Get folders from Skyfish API.
    *
-   * @return array
+   * @return array $folders
    *   Array of Skyfish folders.
    */
   public function getFoldersWithoutCache() {
@@ -244,7 +229,7 @@ class ApiService {
   /**
    * Get all images in a Skyfish folder.
    *
-   * @return array|null
+   * @return array $images
    *   Array of images in a folder.
    */
   public function getImagesInFolder(int $folder_id) {
@@ -258,7 +243,6 @@ class ApiService {
       }
 
       return $images;
-
     }
 
     return $cache->data ?? [];
@@ -270,7 +254,7 @@ class ApiService {
    * @param int $folder_id
    *   Id of the folder.
    *
-   * @return array
+   * @return array $images
    *   Array of images in a folder.
    */
   public function getImagesInFolderWithoutCache(int $folder_id) {
@@ -286,12 +270,12 @@ class ApiService {
    * @param array $images
    *   Loaded images.
    *
-   * @return array
+   * @return array $images
    *   Array of images with metadata.
    */
   public function getImagesMetadata(array $images) {
     foreach ($images as $image_id => $image) {
-      if (FALSE === $metadata = $this->getImageMetadata($image)) {
+      if (($metadata = $this->getImageMetadata($image)) === FALSE) {
         unset($images[$image_id]);
       }
 
@@ -307,7 +291,7 @@ class ApiService {
    * @param \stdClass $image
    *   Skyfish image.
    *
-   * @return bool
+   * @return bool|\stdClass $image
    *   If image title empty display Skyfish id.
    */
   public function getImageMetadata(\stdClass $image) {
@@ -345,13 +329,13 @@ class ApiService {
    * @param int $img_id
    *   Id of the image.
    *
-   * @return string
+   * @return string $filename
    *   Filename of the image.
    */
-  public function getImageTitle($img_id) {
+  public function getImageTitle(int $img_id) {
     $request = $this->doRequest('/media/' . $img_id);
     $full_filename = $request->filename;
-    $filename = substr($full_filename, 0, (strrpos($full_filename, ".")));
+    $filename = substr($full_filename, 0, (strrpos($full_filename, '.')));
 
     return $filename;
   }
@@ -365,7 +349,7 @@ class ApiService {
    * @return string
    *   Filename.
    */
-  public function getFilename($img_id) {
+  public function getFilename(int $img_id) {
     $request = $this->doRequest('/media/' . $img_id);
 
     return $request->filename;
@@ -380,7 +364,7 @@ class ApiService {
    * @return string
    *   Download url.
    */
-  public function getImageDownloadUrl($img_id) {
+  public function getImageDownloadUrl(int $img_id) {
     $request = $this->doRequest('/media/' . $img_id . '/download_location');
 
     return $request->url;
