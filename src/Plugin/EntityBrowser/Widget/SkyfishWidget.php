@@ -92,13 +92,12 @@ class SkyfishWidget extends Upload {
 
     $folders = $this->connect->getFolders();
 
-    if (empty($folders)) {
-      $form['message'] = [
-        '#type' => 'item',
-        '#prefix' => '<p>',
-        '#markup' => isset($folders->message) ? $folders->message : $this->t('Error while getting data'),
-        '#suffix' => '</p>',
-      ];
+    // Show message if there is an error while getting folders.
+    if (!is_array($folders) || empty($folders)) {
+      $error_message = $folders->message ? $this->t($folders->message) : $this->t('Error while getting data');
+      drupal_set_message($error_message, 'error');
+
+      return $form;
     }
 
     $form['skyfish'] = [
@@ -113,9 +112,11 @@ class SkyfishWidget extends Upload {
 
     foreach ($folders as $folder) {
       $images = $this->connect->getImagesInFolder($folder->id);
+
       if (empty($images)) {
         continue;
       }
+
       $form['folder_' . $folder->id] = [
         '#type' => 'details',
         '#group' => 'skyfish',
@@ -141,6 +142,7 @@ class SkyfishWidget extends Upload {
         ];
       }
     }
+
     $form['#attached']['library'][] = 'media_skyfish/pager';
 
     return $form;
