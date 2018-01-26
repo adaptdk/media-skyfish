@@ -170,7 +170,6 @@ class SkyfishWidget extends Upload {
     $images_with_metadata = $this->connect->getImagesMetadata($media);
     $saved_images = $this->saveImages($images_with_metadata);
     $this->selectEntities($saved_images, $form_state);
-
   }
 
   /**
@@ -179,7 +178,7 @@ class SkyfishWidget extends Upload {
    * @param array $images
    *   Skyfish images.
    *
-   * @return array
+   * @return array $images
    *   Array of images.
    */
   protected function saveImages(array $images) {
@@ -207,7 +206,7 @@ class SkyfishWidget extends Upload {
    * @param \stdClass $image
    *   Skyfish image.
    *
-   * @return \Drupal\file\FileInterface|false
+   * @return \Drupal\file\FileInterface|false $file
    *   Saved image.
    */
   protected function saveFile(\stdClass $image) {
