@@ -206,7 +206,7 @@ class ApiService {
       $folders = $this->getFoldersWithoutCache();
 
       if (!empty($folders)) {
-        \Drupal::cache()->set($cache_id, $folders, time() + $this->cache * 60);
+        \Drupal::cache()->set($cache_id, $folders, $this->cache);
       }
 
       return $folders;
@@ -239,7 +239,7 @@ class ApiService {
       $images = $this->getImagesInFolderWithoutCache($folder_id);
 
       if (!empty($images)) {
-        \Drupal::cache()->set($cache_id, $images, time() + $this->cache * 60);
+        \Drupal::cache()->set($cache_id, $images, $this->cache);
       }
 
       return $images;
