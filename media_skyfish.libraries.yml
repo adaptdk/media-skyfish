@@ -1,11 +1,11 @@
 pager:
   version: VERSION
   js:
-    js/jquery.simplePagination.js: {}
+    /libraries/contrib/simplepagination/jquery.simplePagination.js: {}
     js/media_skyfish.js: {}
   css:
     theme:
-      css/simplePagination.css: {}
+      /libraries/contrib/simplepagination/simplePagination.css: {}
       css/layout.css: {}
   dependencies:
       - core/jquery

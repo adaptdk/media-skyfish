@@ -17,9 +17,14 @@ This module requires the following module:
  * Entity browser (https://www.drupal.org/project/entity_browser).
  * Chaos tool suite (https://www.drupal.org/project/ctools).
 
+This module requires external library:
+ * simplePagination.js (http://flaviusmatis.github.com/simplePagination.js)
+
+
 
  INSTALLATION
 ------------
+ * Download external library and place it in `libraries/contrib/simplepagination` location.
  * Install as you would normally install a contributed Drupal module.
 
 
@@ -40,8 +45,9 @@ CONFIGURATION
 MAINTAINERS
 -----------
 Current maintainers:
- * Andrius P. (andriuzss) - https://drupal.org/user/2938417
- * Edgaras D. (edgarasda) - https://www.drupal.org/user/3557607/
+ * Andrius P. (andriuzss) - https://www.drupal.org/u/andriuzss
+ * Edgaras D. (edgarasda) - https://www.drupal.org/u/edgarasda
+ * Irmantas P. (irmantasp) - https://www.drupal.org/u/irmantasp
 
 This project has been sponsored by:
  * Adapt A/S - https://www.drupal.org/node/1897408
