@@ -102,6 +102,7 @@ class SkyfishWidget extends Upload {
       return $form;
     }
 
+    // Create VerticalTabs element to recreate folder structure in skyfish.
     $form['skyfish'] = [
       '#type' => 'vertical_tabs',
       '#default_tab' => str_replace('_', '-', 'edit_folder_' . $folders[0]->id),
@@ -112,13 +113,16 @@ class SkyfishWidget extends Upload {
       ],
     ];
 
+    // Parse through each of the folders that are available.
     foreach ($folders as $folder) {
       $images = $this->connect->getImagesInFolder($folder->id);
 
+      // If there are no images, break the loop for particular folder.
       if (empty($images)) {
         continue;
       }
 
+      // Create single vertical tab for particular folder.
       $form['folder_' . $folder->id] = [
         '#type' => 'details',
         '#group' => 'skyfish',
@@ -131,6 +135,7 @@ class SkyfishWidget extends Upload {
         ],
       ];
 
+      // Create list of imags in the folder.
       foreach ($images as $image) {
         $form['folder_' . $folder->id][$image->unique_media_id] = [
           '#type' => 'checkbox',
@@ -145,6 +150,7 @@ class SkyfishWidget extends Upload {
       }
     }
 
+    // Attach pager library to display images properly with pager settings.
     $form['#attached']['drupalSettings']['media_skyfish']['pager']['media_skyfish_items_per_page'] = $this->connect->config->getItemsPerPage();
     $form['#attached']['library'][] = 'media_skyfish/pager';
 
