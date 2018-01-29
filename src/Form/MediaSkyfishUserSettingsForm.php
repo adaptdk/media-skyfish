@@ -3,8 +3,12 @@
 namespace Drupal\media_skyfish\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\media_skyfish\ApiService;
+use Drupal\media_skyfish\ConfigService;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class MediaSkyfishUserSettingsForm.
@@ -15,6 +19,50 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
    * Base url for service.
    */
   public const API_BASE_URL = 'https://api.colourbox.com';
+
+  /**
+   * Skyfish config service.
+   *
+   * @var \Drupal\media_skyfish\ConfigService
+   */
+  protected $config;
+
+  /**
+   * Skyfish api service.
+   *
+   * @var \Drupal\media_skyfish\ApiService
+   */
+  protected $connect;
+
+  /**
+   * Current user entity.
+   *
+   * @var \Drupal\user\Entity\User
+   */
+  protected $user;
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, ConfigService $config, ApiService $connect) {
+    parent::__construct($config_factory);
+    $this->config = $config;
+    $this->connect = $connect;
+    $this->user = $entity_type_manager->getStorage('user')->load($this->currentUser()->id());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory'),
+      $container->get('entity_type.manager'),
+      $container->get('media_skyfish.configservice'),
+      $container->get('media_skyfish.apiservice')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -36,14 +84,13 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
     $form['skyfish_user'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Skyfish Username'),
       '#description' => $this->t('Please enter username to login to Skyfish.'),
       '#maxlength' => 128,
       '#size' => 128,
-      '#default_value' => $user->field_skyfish_username->value,
+      '#default_value' => $this->user->field_skyfish_username->value,
     ];
     $form['skyfish_password'] = [
       '#type' => 'password',
@@ -51,7 +98,7 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
       '#description' => $this->t('Please enter password to login to Skyfish.'),
       '#maxlength' => 128,
       '#size' => 128,
-      '#default_value' => $user->field_skyfish_password->value,
+      '#default_value' => $this->user->field_skyfish_password->value,
     ];
     $form['skyfish_api_key'] = [
       '#type' => 'textfield',
@@ -59,7 +106,7 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
       '#description' => $this->t('Please enter Skyfish API Key here.'),
       '#maxlength' => 128,
       '#size' => 128,
-      '#default_value' => $user->field_skyfish_api_user->value,
+      '#default_value' => $this->user->field_skyfish_api_user->value,
     ];
     $form['skyfish_api_secret'] = [
       '#type' => 'textfield',
@@ -67,7 +114,7 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
       '#description' => $this->t('Please enter Skyfish API secret key.'),
       '#maxlength' => 128,
       '#size' => 128,
-      '#default_value' => $user->field_skyfish_secret_api_key->value,
+      '#default_value' => $this->user->field_skyfish_secret_api_key->value,
     ];
 
     return parent::buildForm($form, $form_state);
@@ -79,12 +126,12 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 
-    $key = $form_state->getValue('skyfish_api_key');
-    $secret = $form_state->getValue('skyfish_api_secret');
-    $username = $form_state->getValue('skyfish_user');
-    $password = $form_state->getValue('skyfish_password');
+    $this->config->setKey($form_state->getValue('skyfish_api_key'));
+    $this->config->setSecret($form_state->getValue('skyfish_api_secret'));
+    $this->config->setUsername($form_state->getValue('skyfish_user'));
+    $this->config->setPassword($form_state->getValue('skyfish_password'));
 
-    if ($this->validateLogins($key, $secret, $username, $password) === FALSE) {
+    if (!$this->connect->getToken()) {
       $form_state->setError($form, 'Incorrect login information.');
     }
   }
@@ -96,58 +143,13 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
 
     $values = $form_state->getValues();
-    $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
 
-    if ($user) {
-      $user->set('field_skyfish_api_user', $values['skyfish_api_key']);
-      $user->set('field_skyfish_secret_api_key', $values['skyfish_api_secret']);
-      $user->set('field_skyfish_username', $values['skyfish_user']);
-      $user->set('field_skyfish_password', $values['skyfish_password']);
-      $user->save();
+    if ($this->user) {
+      $this->user->set('field_skyfish_api_user', $values['skyfish_api_key']);
+      $this->user->set('field_skyfish_secret_api_key', $values['skyfish_api_secret']);
+      $this->user->set('field_skyfish_username', $values['skyfish_user']);
+      $this->user->set('field_skyfish_password', $values['skyfish_password']);
+      $this->user->save();
     }
   }
-
-  /**
-   * Validate user logins for Skyfish API.
-   *
-   * @param string $key
-   *   Skyfish API key for user.
-   * @param string $secret
-   *   Skyfish API secret for user.
-   * @param string $username
-   *   Skyfish API user username.
-   * @param string $password
-   *   Skyfish API user password.
-   *
-   * @return bool|string
-   *   Skyfish token or false if request invalid.
-   */
-  public function validateLogins(string $key, string $secret, string $username, string $password) {
-    $client = \Drupal::httpClient();
-
-    $hmac = hash_hmac('sha1', $key . ':' . time(), $secret);
-
-    try {
-      $request = $client
-        ->request('POST',
-          self::API_BASE_URL . '/authenticate/userpasshmac',
-          [
-            'json' =>
-              [
-                'username' => $username,
-                'password' => $password,
-                'key' => $key,
-                'ts' => time(),
-                'hmac' => $hmac,
-              ],
-          ]);
-      $response = json_decode($request->getBody()->getContents(), TRUE);
-    }
-    catch (\Exception $e) {
-      return FALSE;
-    }
-
-    return $response['token'] ?? FALSE;
-  }
-
 }
