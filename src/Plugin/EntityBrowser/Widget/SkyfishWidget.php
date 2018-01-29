@@ -5,10 +5,12 @@ namespace Drupal\media_skyfish\Plugin\EntityBrowser\Widget;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Utility\Token;
 use Drupal\entity_browser\Plugin\EntityBrowser\Widget\Upload;
 use Drupal\entity_browser\WidgetValidationManager;
 use Drupal\media_skyfish\ApiService;
+use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -40,15 +42,31 @@ class SkyfishWidget extends Upload {
   protected $connect;
 
   /**
+   * Http client.
+   *
+   * @var \GuzzleHttp\Client
+   */
+  protected $client;
+
+  /**
+   * Current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $user;
+
+  /**
    * SkyfishWidget constructor.
    *
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EventDispatcherInterface $event_dispatcher, EntityTypeManagerInterface $entity_type_manager, WidgetValidationManager $validation_manager, ModuleHandlerInterface $module_handler, Token $token, LoggerInterface $logger, ApiService $api_service) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EventDispatcherInterface $event_dispatcher, EntityTypeManagerInterface $entity_type_manager, WidgetValidationManager $validation_manager, ModuleHandlerInterface $module_handler, Token $token, Client $client, AccountInterface $account, LoggerInterface $logger, ApiService $api_service) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $event_dispatcher, $entity_type_manager, $validation_manager, $module_handler, $token);
 
     $this->logger = $logger;
     $this->connect = $api_service;
+    $this->client = $client;
+    $this->user = $account;
   }
 
   /**
@@ -64,6 +82,8 @@ class SkyfishWidget extends Upload {
       $container->get('plugin.manager.entity_browser.widget_validation'),
       $container->get('module_handler'),
       $container->get('token'),
+      $container->get('http_client'),
+      $container->get('current_user'),
       $container->get('logger.channel.media_skyfish'),
       $container->get('media_skyfish.apiservice')
     );
@@ -248,9 +268,8 @@ class SkyfishWidget extends Upload {
    *   Saved image.
    */
   protected function saveFile(\stdClass $image) {
-    $user = \Drupal::currentUser()->id();
-    $destination = $this->fileDefaultScheme() . '://media-skyfish/' . $user . '/' . $image->filename;
-    $data = \Drupal::httpClient()->get($image->download_url)->getBody();
+    $destination = $this->fileDefaultScheme() . '://media-skyfish/' . $this->user->id() . '/' . $image->filename;
+    $data = $this->client->get($image->download_url)->getBody();
     $file = file_save_data($data, $destination);
 
     if (!$file) {
