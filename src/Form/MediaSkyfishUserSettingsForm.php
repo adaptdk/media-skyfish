@@ -126,11 +126,13 @@ class MediaSkyfishUserSettingsForm extends ConfigFormBase {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 
+    // Set input values temporarily for the ConfigService.
     $this->config->setKey($form_state->getValue('skyfish_api_key'));
     $this->config->setSecret($form_state->getValue('skyfish_api_secret'));
     $this->config->setUsername($form_state->getValue('skyfish_user'));
     $this->config->setPassword($form_state->getValue('skyfish_password'));
 
+    // Check if using input values it is possible to authorize with Skyfish API.
     if (!$this->connect->getToken()) {
       $form_state->setError($form, 'Incorrect login information.');
     }
