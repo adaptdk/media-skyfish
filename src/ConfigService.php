@@ -60,6 +60,13 @@ class ConfigService {
   protected $logger;
 
   /**
+   * Skyfish Widget pager items count.
+   *
+   * @var int
+   */
+  protected $items_per_page;
+
+  /**
    * ConfigService constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -86,6 +93,7 @@ class ConfigService {
       $this->config->get('media_skyfish_global_user') : $this->user->field_skyfish_username->value;
     $this->password = empty($this->user->field_skyfish_password->value) ?
       $this->config->get('media_skyfish_global_password') : $this->user->field_skyfish_password->value;
+    $this->items_per_page = $this->config->get('media_skyfish_items_per_page');
   }
 
   /**
@@ -216,6 +224,33 @@ class ConfigService {
    */
   public function getHmac() {
     return hash_hmac('sha1', $this->key . ':' . time(), $this->secret);
+  }
+
+  /**
+   * Get image count per page.
+   *
+   * @return int $items_per_page
+   *   Number of items that should be shown on one page of Skyfish widget when
+   * pager is enabled.
+   */
+  public function getItemsPerPage(): int {
+    return $this->items_per_page;
+  }
+
+  /**
+   * Set image count per page.
+   *
+   * @param int $items_per_page
+   *   Number of items that should be shown on one page of Skyfish widget when
+   * pager is enabled.
+   *
+   * @return $this
+   *   ConfigService.
+   */
+  public function setItemsPerPage(int $items_per_page): ConfigService {
+    $this->items_per_page = $items_per_page;
+
+    return $this;
   }
 
 }

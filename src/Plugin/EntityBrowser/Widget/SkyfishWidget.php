@@ -145,6 +145,7 @@ class SkyfishWidget extends Upload {
       }
     }
 
+    $form['#attached']['drupalSettings']['media_skyfish']['pager']['media_skyfish_items_per_page'] = $this->connect->config->getItemsPerPage();
     $form['#attached']['library'][] = 'media_skyfish/pager';
 
     return $form;
