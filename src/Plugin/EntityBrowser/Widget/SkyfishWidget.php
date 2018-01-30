@@ -267,10 +267,15 @@ class SkyfishWidget extends Upload {
    *   Saved image.
    */
   protected function saveFile(\stdClass $image) {
-    $destination = $this->fileDefaultScheme() . '://media-skyfish/' . $this->user->id() . '/' . $image->filename;
-    $data = $this->client->get($image->download_url)->getBody();
-    $file = file_save_data($data, $destination);
+    $folder = $this->fileDefaultScheme() . '://media-skyfish/' . $this->user->id() . '/';
+    $destination = $folder . $image->filename;
 
+    // Create directory for user images.
+    file_prepare_directory($folder, FILE_CREATE_DIRECTORY);
+    // Save file in the system from the url.
+    $file = system_retrieve_file($image->download_url, $destination, TRUE, FILE_EXISTS_RENAME);
+
+    // If file was not saved, throw an error.
     if (!$file) {
       $this->logger->error('Unable to save file for @image', ['@image' => $image->filename]);
     }
