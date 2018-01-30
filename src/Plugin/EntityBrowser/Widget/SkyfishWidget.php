@@ -240,7 +240,6 @@ class SkyfishWidget extends Upload {
    *   Array of images.
    */
   protected function saveImages(array $images) {
-
     foreach ($images as $image_id => $image) {
       $images[$image_id] = $this->saveFile($image);
     }
