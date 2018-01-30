@@ -6,22 +6,14 @@ media_skyfish.media_skyfish_settings_form:
     _title: 'Media Skyfish Settings'
   requirements:
     _access: 'TRUE'
-    _permission: 'administer site configuration'
+    _permission: 'administer media skyfish'
   
 
 media_skyfish.media_skyfish_user_settings_form:
-  path: '/user/{user}/skyfish'
+  path: '/admin/config/media/media_skyfish/user_settings'
   defaults:
     _form: '\Drupal\media_skyfish\Form\MediaSkyfishUserSettingsForm'
     _title: 'Media Skyfish User Settings'
   requirements:
     _access: 'TRUE'
-  
-
-media_skyfish.media_skyfish_controller_hello:
-  path: '/media_skyfish/hello'
-  defaults:
-    _controller: '\Drupal\media_skyfish\Controller\MediaSkyfishController::hello'
-    _title: 'Test'
-  requirements:
-    _permission: 'access content'
+    _permission: 'configure own skyfish'
