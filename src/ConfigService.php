@@ -213,6 +213,7 @@ class ConfigService {
   public function getCacheTime() {
     $minutes = $this->config->get('media_skyfish_cache');
     $cache = new \DateTime('+' . $minutes . ' minutes');
+
     return $cache->getTimestamp();
   }
 
